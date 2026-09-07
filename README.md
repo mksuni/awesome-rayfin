@@ -40,6 +40,29 @@ npm create @microsoft/rayfin -- --template ./awesome-rayfin
 
 The CLI reads `rayfin-template.yml` at the repo root and presents an interactive picker when multiple templates are available.
 
+## Gallery Website
+
+The repository includes a responsive gallery application generated from
+`rayfin-template.yml` and the metadata in each template directory. It does not
+maintain a separate hand-authored template catalog.
+
+```bash
+npm install
+npm run dev
+```
+
+Use `npm run build` for a production build and `npm run preview` to inspect it
+locally. The gallery is configured for Rayfin static hosting in
+`rayfin/rayfin.yml`; deploy it with:
+
+```bash
+npm run rayfin:up
+```
+
+`npm run generate:gallery` refreshes the generated card data and copies any
+available template screenshots into the static build. The command also runs
+automatically before development and production builds.
+
 ---
 
 ## 📦 Templates
