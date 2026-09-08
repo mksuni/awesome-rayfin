@@ -15,6 +15,24 @@
     />
     <meta property="og:type" content="website" />
     <link rel="icon" href="/gallery-mark.svg" type="image/svg+xml" />
+    <script>
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem('awesome-rayfin-theme');
+        } catch (error) {
+          console.warn('Unable to read the saved theme preference.', error);
+        }
+        const theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <title>Awesome Rayfin — Template Gallery</title>
   </head>
   <body>

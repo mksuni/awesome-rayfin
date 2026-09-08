@@ -1,23 +1,34 @@
 import {
-  ArrowRight,
-  Check,
-  ChevronRight,
-  CircleDot,
-  Clipboard,
-  Code2,
-  Database,
-  ExternalLink,
-  Github,
-  KeyRound,
-  Layers3,
-  Menu,
-  PackageOpen,
-  Search,
-  Share2,
-  Sparkles,
-  X,
-  Zap,
-} from 'lucide-react';
+  Badge,
+  Button,
+  Card,
+  FluentProvider,
+  Input,
+  Select,
+  Tooltip,
+  webDarkTheme,
+  webLightTheme,
+} from '@fluentui/react-components';
+import {
+  ArrowRightRegular,
+  CheckmarkRegular,
+  ChevronRightRegular,
+  CircleRegular,
+  ClipboardRegular,
+  CodeRegular,
+  DatabaseRegular,
+  DismissRegular,
+  FlashRegular,
+  KeyRegular,
+  LayerRegular,
+  NavigationRegular,
+  OpenRegular,
+  SearchRegular,
+  ShareRegular,
+  SparkleRegular,
+  WeatherMoonRegular,
+  WeatherSunnyRegular,
+} from '@fluentui/react-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import templateData from './generated/templates.json';
 import { ALL_FILTER, filterTemplates, uniqueSorted } from './lib/gallery';
@@ -30,6 +41,18 @@ const galleryCommand =
   'npm create @microsoft/rayfin -- --template https://github.com/mksuni/awesome-rayfin';
 
 type CopyStatus = { key: string; message: string; error: boolean } | null;
+type ThemeMode = 'light' | 'dark';
+
+function initialTheme(): ThemeMode {
+  let storedTheme: string | null = null;
+  try {
+    storedTheme = window.localStorage.getItem('awesome-rayfin-theme');
+  } catch (error) {
+    console.warn('Unable to read the saved theme preference.', error);
+  }
+  if (storedTheme === 'light' || storedTheme === 'dark') return storedTheme;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 function CopyButton({
   copyKey,
@@ -49,23 +72,24 @@ function CopyButton({
   const copied = copiedKey === copyKey;
 
   return (
-    <button
+    <Button
       className={compact ? 'icon-button' : 'copy-button'}
-      type="button"
+      appearance="subtle"
+      size="small"
+      icon={copied ? <CheckmarkRegular /> : <ClipboardRegular />}
       onClick={() => onCopy(copyKey, text)}
       aria-label={copied ? 'Copied to clipboard' : label}
     >
-      {copied ? <Check aria-hidden="true" /> : <Clipboard aria-hidden="true" />}
       {!compact && <span>{copied ? 'Copied' : label}</span>}
-    </button>
+    </Button>
   );
 }
 
 function ServiceIcon({ capability }: { capability: string }) {
-  if (capability === 'Authentication') return <KeyRound aria-hidden="true" />;
-  if (capability === 'Data API') return <Database aria-hidden="true" />;
-  if (capability === 'Microsoft Fabric') return <Layers3 aria-hidden="true" />;
-  return <Zap aria-hidden="true" />;
+  if (capability === 'Authentication') return <KeyRegular aria-hidden="true" />;
+  if (capability === 'Data API') return <DatabaseRegular aria-hidden="true" />;
+  if (capability === 'Microsoft Fabric') return <LayerRegular aria-hidden="true" />;
+  return <FlashRegular aria-hidden="true" />;
 }
 
 function TemplateCard({
@@ -86,7 +110,8 @@ function TemplateCard({
     : null;
 
   return (
-    <article
+    <Card
+      role="article"
       className="template-card"
       id={`template-${template.id}`}
       style={{ '--card-index': index } as React.CSSProperties}
@@ -99,16 +124,20 @@ function TemplateCard({
             <span className="visual-orbit orbit-one" />
             <span className="visual-orbit orbit-two" />
             <span className="visual-mark">{template.id.charAt(0).toUpperCase()}</span>
-            <Code2 />
+            <CodeRegular />
           </div>
         )}
         <div className="visual-overlay">
           <div className="stack-row">
             {template.stacks.slice(0, 3).map((stack) => (
-              <span key={stack}>{stack}</span>
+              <Badge appearance="tint" key={stack}>{stack}</Badge>
             ))}
           </div>
-          {template.experimental && <span className="experimental">Experimental</span>}
+          {template.experimental && (
+            <Badge appearance="tint" color="warning" className="experimental">
+              Experimental
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -118,24 +147,26 @@ function TemplateCard({
             <p className="eyebrow">{template.id}</p>
             <h3>{template.displayName}</h3>
           </div>
-          <button
-            className="icon-button share-button"
-            type="button"
-            onClick={() => onShare(template)}
-            aria-label={`Copy link to ${template.displayName}`}
-          >
-            <Share2 aria-hidden="true" />
-          </button>
+          <Tooltip content={`Copy link to ${template.displayName}`} relationship="label">
+            <Button
+              className="icon-button share-button"
+              appearance="subtle"
+              size="small"
+              icon={<ShareRegular />}
+              onClick={() => onShare(template)}
+              aria-label={`Copy link to ${template.displayName}`}
+            />
+          </Tooltip>
         </div>
 
         <p className="card-description">{template.description}</p>
 
         <div className="capability-list" aria-label="Capabilities">
           {template.capabilities.map((capability) => (
-            <span className="capability" key={capability}>
+            <Badge appearance="outline" className="capability" key={capability}>
               <ServiceIcon capability={capability} />
               {capability}
-            </span>
+            </Badge>
           ))}
         </div>
 
@@ -158,14 +189,14 @@ function TemplateCard({
 
         <div className="card-footer">
           <a href={template.sourceUrl} target="_blank" rel="noreferrer">
-            <Github aria-hidden="true" />
+            <CodeRegular aria-hidden="true" />
             View source
-            <ExternalLink aria-hidden="true" />
+            <OpenRegular aria-hidden="true" />
           </a>
           <span>{template.path}</span>
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -175,6 +206,7 @@ export default function App() {
   const [stack, setStack] = useState(ALL_FILTER);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>(null);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(initialTheme);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const capabilities = useMemo(
@@ -189,6 +221,19 @@ export default function App() {
     () => filterTemplates(templates, { query, capability, stack }),
     [query, capability, stack],
   );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    document.documentElement.style.colorScheme = themeMode;
+    try {
+      window.localStorage.setItem('awesome-rayfin-theme', themeMode);
+    } catch (error) {
+      console.warn('Unable to save the theme preference.', error);
+    }
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', themeMode === 'dark' ? '#07172d' : '#f5f5f5');
+  }, [themeMode]);
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -247,6 +292,10 @@ export default function App() {
   };
 
   return (
+    <FluentProvider
+      className="fluent-root"
+      theme={themeMode === 'dark' ? webDarkTheme : webLightTheme}
+    >
     <div className="app-shell">
       <a className="skip-link" href="#templates">
         Skip to templates
@@ -261,16 +310,15 @@ export default function App() {
           <span className="community-pill">Community</span>
         </a>
 
-        <button
+        <Button
           className="mobile-menu-button"
-          type="button"
+          appearance="subtle"
+          icon={mobileNavOpen ? <DismissRegular /> : <NavigationRegular />}
           onClick={() => setMobileNavOpen((open) => !open)}
           aria-expanded={mobileNavOpen}
           aria-controls="primary-navigation"
           aria-label="Toggle navigation"
-        >
-          {mobileNavOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </button>
+        />
 
         <nav
           id="primary-navigation"
@@ -286,8 +334,20 @@ export default function App() {
           <a href={contributionUrl} target="_blank" rel="noreferrer">
             Contribute
           </a>
+          <Tooltip
+            content={`Switch to ${themeMode === 'dark' ? 'light' : 'dark'} mode`}
+            relationship="label"
+          >
+            <Button
+              className="theme-toggle"
+              appearance="subtle"
+              icon={themeMode === 'dark' ? <WeatherSunnyRegular /> : <WeatherMoonRegular />}
+              onClick={() => setThemeMode((mode) => (mode === 'dark' ? 'light' : 'dark'))}
+              aria-label={`Switch to ${themeMode === 'dark' ? 'light' : 'dark'} mode`}
+            />
+          </Tooltip>
           <a className="github-button" href={repositoryUrl} target="_blank" rel="noreferrer">
-            <Github aria-hidden="true" />
+            <CodeRegular aria-hidden="true" />
             GitHub
           </a>
         </nav>
@@ -301,7 +361,7 @@ export default function App() {
 
           <div className="hero-copy">
             <div className="hero-kicker">
-              <Sparkles aria-hidden="true" />
+              <SparkleRegular aria-hidden="true" />
               Community-built for Rayfin + Microsoft Fabric
             </div>
             <h1>
@@ -316,7 +376,7 @@ export default function App() {
             <div className="hero-actions">
               <a className="primary-action" href="#templates">
                 Explore templates
-                <ArrowRight aria-hidden="true" />
+                <ArrowRightRegular aria-hidden="true" />
               </a>
               <a className="secondary-action" href={contributionUrl} target="_blank" rel="noreferrer">
                 Submit your template
@@ -364,8 +424,8 @@ export default function App() {
                   <span className="terminal-url">https://github.com/mksuni/awesome-rayfin</span>
                 </code>
                 <div className="terminal-result">
-                  <span><Check aria-hidden="true" /> Gallery loaded</span>
-                  <span><ChevronRight aria-hidden="true" /> Select a template</span>
+                  <span><CheckmarkRegular aria-hidden="true" /> Gallery loaded</span>
+                  <span><ChevronRightRegular aria-hidden="true" /> Select a template</span>
                 </div>
               </div>
             </div>
@@ -375,10 +435,10 @@ export default function App() {
         </section>
 
         <section className="trust-strip" aria-label="Gallery qualities">
-          <span><CircleDot aria-hidden="true" /> Manifest-driven</span>
-          <span><CircleDot aria-hidden="true" /> Rayfin static hosting</span>
-          <span><CircleDot aria-hidden="true" /> Fabric-ready</span>
-          <span><CircleDot aria-hidden="true" /> Open source</span>
+          <span><CircleRegular aria-hidden="true" /> Manifest-driven</span>
+          <span><CircleRegular aria-hidden="true" /> Rayfin static hosting</span>
+          <span><CircleRegular aria-hidden="true" /> Fabric-ready</span>
+          <span><CircleRegular aria-hidden="true" /> Open source</span>
         </section>
 
         <section className="gallery-section" id="templates">
@@ -397,48 +457,54 @@ export default function App() {
           </div>
 
           <div className="filter-panel">
-            <label className="search-field">
-              <span className="sr-only">Search templates</span>
-              <Search aria-hidden="true" />
-              <input
-                ref={searchRef}
-                type="search"
-                aria-label="Search templates"
-                placeholder="Search templates, stacks, or capabilities..."
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              {query ? (
-                <button type="button" onClick={() => setQuery('')} aria-label="Clear search">
-                  <X aria-hidden="true" />
-                </button>
-              ) : (
-                <kbd>/</kbd>
-              )}
-            </label>
+            <Input
+              className="search-field"
+              ref={searchRef}
+              type="search"
+              aria-label="Search templates"
+              placeholder="Search templates, stacks, or capabilities..."
+              value={query}
+              contentBefore={<SearchRegular />}
+              contentAfter={
+                query ? (
+                  <Button
+                    appearance="subtle"
+                    size="small"
+                    icon={<DismissRegular />}
+                    onClick={() => setQuery('')}
+                    aria-label="Clear search"
+                  />
+                ) : (
+                  <kbd>/</kbd>
+                )
+              }
+              onChange={(_, data) => setQuery(data.value)}
+            />
 
             <label className="select-field">
               <span>Stack</span>
-              <select value={stack} onChange={(event) => setStack(event.target.value)}>
+              <Select value={stack} onChange={(_, data) => setStack(data.value)}>
                 <option>{ALL_FILTER}</option>
                 {stacks.map((item) => (
                   <option key={item}>{item}</option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
 
           <div className="capability-filters" aria-label="Filter by capability">
             {[ALL_FILTER, ...capabilities].map((item) => (
-              <button
+              <Button
                 key={item}
-                type="button"
+                appearance={capability === item ? 'primary' : 'subtle'}
+                shape="circular"
+                size="small"
                 className={capability === item ? 'active' : ''}
                 aria-pressed={capability === item}
                 onClick={() => setCapability(item)}
               >
                 {item}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -457,14 +523,14 @@ export default function App() {
             </div>
           ) : (
             <div className="empty-state">
-              <div><PackageOpen aria-hidden="true" /></div>
+              <div><LayerRegular aria-hidden="true" /></div>
               <h3>No templates match yet</h3>
               <p>
                 Try a broader search or reset the filters to explore the full gallery.
               </p>
-              <button type="button" onClick={resetFilters}>
+              <Button appearance="primary" onClick={resetFilters}>
                 Reset all filters
-              </button>
+              </Button>
             </div>
           )}
         </section>
@@ -479,19 +545,19 @@ export default function App() {
           <div className="workflow-grid">
             <article>
               <span>01</span>
-              <Search aria-hidden="true" />
+              <SearchRegular aria-hidden="true" />
               <h3>Discover</h3>
               <p>Compare real apps by stack, service, and Fabric capability.</p>
             </article>
             <article>
               <span>02</span>
-              <Code2 aria-hidden="true" />
+              <CodeRegular aria-hidden="true" />
               <h3>Scaffold</h3>
               <p>Copy a generated Rayfin CLI command for the exact template you want.</p>
             </article>
             <article>
               <span>03</span>
-              <Zap aria-hidden="true" />
+              <FlashRegular aria-hidden="true" />
               <h3>Ship</h3>
               <p>Build on typed Rayfin services and deploy through static hosting.</p>
             </article>
@@ -515,7 +581,7 @@ export default function App() {
           <div className="contribute-actions">
             <a className="primary-action" href={contributionUrl} target="_blank" rel="noreferrer">
               Propose a template
-              <ArrowRight aria-hidden="true" />
+              <ArrowRightRegular aria-hidden="true" />
             </a>
             <a href={`${repositoryUrl}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noreferrer">
               Read contribution guide
@@ -542,9 +608,10 @@ export default function App() {
         role="status"
         aria-live="polite"
       >
-        {copyStatus?.error ? <X aria-hidden="true" /> : <Check aria-hidden="true" />}
+        {copyStatus?.error ? <DismissRegular aria-hidden="true" /> : <CheckmarkRegular aria-hidden="true" />}
         {copyStatus?.message}
       </div>
     </div>
+    </FluentProvider>
   );
 }

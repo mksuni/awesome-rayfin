@@ -2,7 +2,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import App from './App';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+  delete document.documentElement.dataset.theme;
+});
 
 describe('gallery application', () => {
   it('filters cards and exposes a useful empty state', () => {
@@ -26,5 +30,16 @@ describe('gallery application', () => {
 
     expect(screen.getByText('1 of 10 templates')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Power BI Fixer' })).toBeVisible();
+  });
+
+  it('switches themes and persists the preference', () => {
+    window.localStorage.setItem('awesome-rayfin-theme', 'dark');
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light mode' }));
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(window.localStorage.getItem('awesome-rayfin-theme')).toBe('light');
+    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeVisible();
   });
 });

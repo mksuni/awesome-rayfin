@@ -44,7 +44,9 @@ The CLI reads `rayfin-template.yml` at the repo root and presents an interactive
 
 The repository includes a responsive gallery application generated from
 `rayfin-template.yml` and the metadata in each template directory. It does not
-maintain a separate hand-authored template catalog.
+maintain a separate hand-authored template catalog. The interface uses Microsoft
+Fluent UI and supports persisted light and dark themes, defaulting to the
+visitor's system preference.
 
 ```bash
 npm install
