@@ -61,9 +61,8 @@ locally. The gallery is configured for Rayfin static hosting in
 npm run rayfin:up
 ```
 
-`npm run generate:gallery` refreshes the generated card data and copies any
-available template screenshots into the static build. The command also runs
-automatically before development and production builds.
+`npm run generate:gallery` refreshes the generated card data. The command also
+runs automatically before development and production builds.
 
 ---
 

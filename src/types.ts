@@ -16,7 +16,6 @@ export interface GalleryTemplate {
   capabilities: string[];
   services: TemplateServices;
   experimental: boolean;
-  previewImage: string | null;
 }
 
 export interface GalleryFilters {

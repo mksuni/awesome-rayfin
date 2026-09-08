@@ -22,8 +22,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "angular-dashboard",
@@ -49,8 +48,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "field-technician",
@@ -78,8 +76,7 @@
       "storage": true,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "helsinki-public-transport",
@@ -104,8 +101,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": "generated/previews/helsinki-public-transport.webp"
+    "experimental": false
   },
   {
     "id": "ibcs-trainer",
@@ -132,8 +128,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "pbi-fixer",
@@ -159,8 +154,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": "generated/previews/pbi-fixer.png"
+    "experimental": false
   },
   {
     "id": "slide-deck",
@@ -186,8 +180,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "static-blankapp",
@@ -212,8 +205,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   },
   {
     "id": "todoapp",
@@ -240,8 +232,7 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": true,
-    "previewImage": null
+    "experimental": true
   },
   {
     "id": "universal-app",
@@ -268,7 +259,6 @@
       "storage": false,
       "staticHosting": true
     },
-    "experimental": false,
-    "previewImage": null
+    "experimental": false
   }
 ]

@@ -10,10 +10,12 @@ afterEach(() => {
 
 describe('gallery application', () => {
   it('filters cards and exposes a useful empty state', () => {
-    render(<App />);
+    const { container } = render(<App />);
 
     const total = screen.getByText(/\d+ of \d+ templates/);
     expect(total).toHaveTextContent('10 of 10 templates');
+    expect(container.querySelector('.card-visual')).not.toBeInTheDocument();
+    expect(container.querySelector('img[src*="generated/previews"]')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Search templates' }), {
       target: { value: 'no-such-template' },

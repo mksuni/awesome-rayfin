@@ -29,7 +29,6 @@ export function deriveTemplateData({
   pkg,
   manifest,
   hasFabricAssets = false,
-  previewImage = null,
 }) {
   const id = pkg.template?.name;
   if (!id || !pkg.template?.displayName || !pkg.template?.description) {
@@ -71,6 +70,5 @@ export function deriveTemplateData({
       ]),
     ),
     experimental: /^\[experimental\]/i.test(entry.name),
-    previewImage,
   };
 }

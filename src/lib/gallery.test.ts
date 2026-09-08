@@ -13,7 +13,6 @@ const template = (overrides: Partial<GalleryTemplate>): GalleryTemplate => ({
   capabilities: ['Authentication'],
   services: { auth: true, data: false, storage: false, staticHosting: true },
   experimental: false,
-  previewImage: null,
   ...overrides,
 });
 

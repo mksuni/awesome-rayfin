@@ -94,54 +94,34 @@ function ServiceIcon({ capability }: { capability: string }) {
 
 function TemplateCard({
   template,
-  index,
   copiedKey,
   onCopy,
   onShare,
 }: {
   template: GalleryTemplate;
-  index: number;
   copiedKey: string | null;
   onCopy: (key: string, text: string) => void;
   onShare: (template: GalleryTemplate) => void;
 }) {
-  const previewUrl = template.previewImage
-    ? `${import.meta.env.BASE_URL}${template.previewImage}`
-    : null;
-
   return (
     <Card
       role="article"
       className="template-card"
       id={`template-${template.id}`}
-      style={{ '--card-index': index } as React.CSSProperties}
     >
-      <div className={`card-visual theme-${index % 5}`}>
-        {previewUrl ? (
-          <img src={previewUrl} alt="" loading="lazy" />
-        ) : (
-          <div className="visual-fallback" aria-hidden="true">
-            <span className="visual-orbit orbit-one" />
-            <span className="visual-orbit orbit-two" />
-            <span className="visual-mark">{template.id.charAt(0).toUpperCase()}</span>
-            <CodeRegular />
-          </div>
-        )}
-        <div className="visual-overlay">
+      <div className="card-body">
+        <div className="card-meta">
           <div className="stack-row">
-            {template.stacks.slice(0, 3).map((stack) => (
+            {template.stacks.map((stack) => (
               <Badge appearance="tint" key={stack}>{stack}</Badge>
             ))}
           </div>
           {template.experimental && (
-            <Badge appearance="tint" color="warning" className="experimental">
+            <Badge appearance="tint" color="warning">
               Experimental
             </Badge>
           )}
         </div>
-      </div>
-
-      <div className="card-body">
         <div className="card-title-row">
           <div>
             <p className="eyebrow">{template.id}</p>
@@ -510,11 +490,10 @@ export default function App() {
 
           {filteredTemplates.length > 0 ? (
             <div className="template-grid">
-              {filteredTemplates.map((template, index) => (
+              {filteredTemplates.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  index={index}
                   copiedKey={copyStatus?.key ?? null}
                   onCopy={copyText}
                   onShare={shareTemplate}
