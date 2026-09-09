@@ -44,4 +44,19 @@ describe('gallery application', () => {
     expect(window.localStorage.getItem('awesome-rayfin-theme')).toBe('light');
     expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeVisible();
   });
+
+  it('routes proposal and submission actions to the correct GitHub destinations', () => {
+    render(<App />);
+
+    expect(screen.getByRole('link', { name: 'Propose a template' })).toHaveAttribute(
+      'href',
+      expect.stringContaining(
+        '/issues/new?template=new-template-proposal.yml&labels=template',
+      ),
+    );
+    expect(screen.getByRole('link', { name: 'Submit your template' })).toHaveAttribute(
+      'href',
+      'https://github.com/mksuni/awesome-rayfin/blob/main/CONTRIBUTING.md',
+    );
+  });
 });

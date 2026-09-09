@@ -36,7 +36,9 @@ import type { GalleryTemplate } from './types';
 
 const templates = templateData as GalleryTemplate[];
 const repositoryUrl = 'https://github.com/mksuni/awesome-rayfin';
-const contributionUrl = `${repositoryUrl}/issues/new?template=new-template-proposal.yml`;
+const contributionGuideUrl = `${repositoryUrl}/blob/main/CONTRIBUTING.md`;
+const templateProposalUrl =
+  `${repositoryUrl}/issues/new?template=new-template-proposal.yml&labels=template`;
 const galleryCommand =
   'npm create @microsoft/rayfin -- --template https://github.com/mksuni/awesome-rayfin';
 
@@ -311,7 +313,7 @@ export default function App() {
           <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>
             How it works
           </a>
-          <a href={contributionUrl} target="_blank" rel="noreferrer">
+          <a href={contributionGuideUrl} target="_blank" rel="noreferrer">
             Contribute
           </a>
           <Tooltip
@@ -358,7 +360,7 @@ export default function App() {
                 Explore templates
                 <ArrowRightRegular aria-hidden="true" />
               </a>
-              <a className="secondary-action" href={contributionUrl} target="_blank" rel="noreferrer">
+              <a className="secondary-action" href={contributionGuideUrl} target="_blank" rel="noreferrer">
                 Submit your template
               </a>
             </div>
@@ -558,11 +560,11 @@ export default function App() {
             </p>
           </div>
           <div className="contribute-actions">
-            <a className="primary-action" href={contributionUrl} target="_blank" rel="noreferrer">
+            <a className="primary-action" href={templateProposalUrl} target="_blank" rel="noreferrer">
               Propose a template
               <ArrowRightRegular aria-hidden="true" />
             </a>
-            <a href={`${repositoryUrl}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noreferrer">
+            <a href={contributionGuideUrl} target="_blank" rel="noreferrer">
               Read contribution guide
             </a>
           </div>
@@ -578,7 +580,7 @@ export default function App() {
         <div>
           <a href={`${repositoryUrl}/blob/main/LICENSE`} target="_blank" rel="noreferrer">MIT License</a>
           <a href={repositoryUrl} target="_blank" rel="noreferrer">GitHub</a>
-          <a href={`${repositoryUrl}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noreferrer">Contribute</a>
+          <a href={contributionGuideUrl} target="_blank" rel="noreferrer">Contribute</a>
         </div>
       </footer>
 
