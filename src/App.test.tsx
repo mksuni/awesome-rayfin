@@ -62,4 +62,30 @@ describe('gallery application', () => {
       'https://github.com/mksuni/awesome-rayfin/blob/main/CONTRIBUTING.md',
     );
   });
+
+  it('shows architecture and cross-platform Fabric deployment guidance for templates', () => {
+    render(<App />);
+
+    const detailButtons = screen.getAllByRole('button', { name: 'View details' });
+    expect(detailButtons).toHaveLength(10);
+    fireEvent.click(detailButtons[0]);
+
+    expect(screen.getByRole('dialog')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Architecture' })).toBeVisible();
+    expect(screen.getByRole('img', { name: /architecture:/i })).toBeVisible();
+    expect(screen.getByRole('link', { name: /start a free trial/i })).toHaveAttribute(
+      'href',
+      'https://learn.microsoft.com/fabric/fundamentals/fabric-trial',
+    );
+
+    const bashScript = screen.getByLabelText('bash deployment script');
+    expect(bashScript).toHaveTextContent('FABRIC_CAPACITY_ID');
+    expect(bashScript).toHaveTextContent('fab api workspaces -X post');
+    expect(bashScript).toHaveTextContent('rayfin up --workspace-id');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'PowerShell' }));
+    expect(screen.getByLabelText('powershell deployment script')).toHaveTextContent(
+      '$FabricWorkspaceId',
+    );
+  });
 });

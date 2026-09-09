@@ -2,9 +2,19 @@ import {
   Badge,
   Button,
   Card,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   FluentProvider,
   Input,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
   Select,
+  Tab,
+  TabList,
   Tooltip,
   webDarkTheme,
   webLightTheme,
@@ -12,7 +22,6 @@ import {
 import {
   ArrowRightRegular,
   CheckmarkRegular,
-  ChevronRightRegular,
   CircleRegular,
   ClipboardRegular,
   CodeRegular,
@@ -21,7 +30,6 @@ import {
   FlashRegular,
   KeyRegular,
   LayerRegular,
-  NavigationRegular,
   OpenRegular,
   SearchRegular,
   ShareRegular,
@@ -41,9 +49,89 @@ const templateProposalUrl =
   `${repositoryUrl}/issues/new?template=new-template-proposal.yml&labels=template`;
 const galleryCommand =
   'npm create @microsoft/rayfin -- --template https://github.com/mksuni/awesome-rayfin';
+const fabricTrialUrl =
+  'https://learn.microsoft.com/fabric/fundamentals/fabric-trial';
 
 type CopyStatus = { key: string; message: string; error: boolean } | null;
 type ThemeMode = 'light' | 'dark';
+type ScriptShell = 'bash' | 'powershell';
+
+const serviceDetails = [
+  { key: 'auth', label: 'Authentication' },
+  { key: 'data', label: 'Data API' },
+  { key: 'storage', label: 'Storage' },
+  { key: 'staticHosting', label: 'Static hosting' },
+] as const;
+
+function bashQuote(value: string) {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
+
+function powershellQuote(value: string) {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function deploymentScript(template: GalleryTemplate, shell: ScriptShell) {
+  const workspaceName = `rayfin-${template.id}`;
+
+  if (shell === 'powershell') {
+    return `# Install the Microsoft Fabric and Rayfin CLIs
+python -m pip install --upgrade ms-fabric-cli
+npm install --global @microsoft/rayfin-cli
+
+# Set your Fabric tenant, capacity, and new workspace
+$FabricTenantId = '<tenant-id>'
+$FabricCapacityId = '<capacity-id>'
+$FabricWorkspaceName = ${powershellQuote(workspaceName)}
+
+# Sign in and create the workspace on your Fabric capacity
+fab auth login
+$PayloadPath = Join-Path $env:TEMP 'rayfin-workspace.json'
+@{
+  displayName = $FabricWorkspaceName
+  capacityId = $FabricCapacityId
+} | ConvertTo-Json | Set-Content $PayloadPath
+$FabricWorkspaceId = fab api workspaces -X post -i $PayloadPath -q id
+Remove-Item $PayloadPath
+
+if (-not $FabricWorkspaceId) {
+  throw 'Fabric workspace creation did not return a workspace ID.'
+}
+
+# Scaffold ${template.displayName} and deploy it with Rayfin
+rayfin init my-rayfin-app -t ${powershellQuote(repositoryUrl)} --template-name ${powershellQuote(template.displayName)}
+Set-Location my-rayfin-app
+rayfin up --workspace-id $FabricWorkspaceId --tenant $FabricTenantId -y`;
+  }
+
+  return `# Install the Microsoft Fabric and Rayfin CLIs
+python -m pip install --upgrade ms-fabric-cli
+npm install --global @microsoft/rayfin-cli
+
+# Set your Fabric tenant, capacity, and new workspace
+export FABRIC_TENANT_ID='<tenant-id>'
+export FABRIC_CAPACITY_ID='<capacity-id>'
+export FABRIC_WORKSPACE_NAME=${bashQuote(workspaceName)}
+
+# Sign in and create the workspace on your Fabric capacity
+fab auth login
+WORKSPACE_PAYLOAD="$(mktemp)"
+printf '{"displayName":"%s","capacityId":"%s"}' \\
+  "$FABRIC_WORKSPACE_NAME" "$FABRIC_CAPACITY_ID" > "$WORKSPACE_PAYLOAD"
+export FABRIC_WORKSPACE_ID
+FABRIC_WORKSPACE_ID="$(fab api workspaces -X post -i "$WORKSPACE_PAYLOAD" -q id)"
+rm -f "$WORKSPACE_PAYLOAD"
+
+if [ -z "$FABRIC_WORKSPACE_ID" ]; then
+  echo 'Fabric workspace creation did not return a workspace ID.' >&2
+  exit 1
+fi
+
+# Scaffold ${template.displayName} and deploy it with Rayfin
+rayfin init my-rayfin-app -t ${bashQuote(repositoryUrl)} --template-name ${bashQuote(template.displayName)}
+cd my-rayfin-app
+rayfin up --workspace-id "$FABRIC_WORKSPACE_ID" --tenant "$FABRIC_TENANT_ID" -y`;
+}
 
 function initialTheme(): ThemeMode {
   let storedTheme: string | null = null;
@@ -99,11 +187,13 @@ function TemplateCard({
   copiedKey,
   onCopy,
   onShare,
+  onView,
 }: {
   template: GalleryTemplate;
   copiedKey: string | null;
   onCopy: (key: string, text: string) => void;
   onShare: (template: GalleryTemplate) => void;
+  onView: (template: GalleryTemplate) => void;
 }) {
   return (
     <Card
@@ -170,11 +260,16 @@ function TemplateCard({
         </div>
 
         <div className="card-footer">
-          <a href={template.sourceUrl} target="_blank" rel="noreferrer">
-            <CodeRegular aria-hidden="true" />
-            View source
-            <OpenRegular aria-hidden="true" />
-          </a>
+          <div className="card-footer-actions">
+            <Button appearance="primary" size="small" onClick={() => onView(template)}>
+              View details
+            </Button>
+            <a href={template.sourceUrl} target="_blank" rel="noreferrer">
+              <CodeRegular aria-hidden="true" />
+              View source
+              <OpenRegular aria-hidden="true" />
+            </a>
+          </div>
           <span>{template.path}</span>
         </div>
       </div>
@@ -182,13 +277,186 @@ function TemplateCard({
   );
 }
 
+function ArchitectureDiagram({ template }: { template: GalleryTemplate }) {
+  const enabledServices = serviceDetails.filter(({ key }) => template.services[key]);
+
+  return (
+    <div
+      className="architecture-diagram"
+      role="img"
+      aria-label={`${template.displayName} architecture: web application connects through Rayfin services to a Microsoft Fabric workspace`}
+    >
+      <div className="architecture-node architecture-app">
+        <CodeRegular aria-hidden="true" />
+        <div>
+          <strong>{template.displayName}</strong>
+          <span>{template.stacks.join(' + ')}</span>
+        </div>
+      </div>
+      <span className="architecture-arrow" aria-hidden="true">→</span>
+      <div className="architecture-services">
+        <span>Rayfin services</span>
+        <div>
+          {enabledServices.map(({ key, label }) => (
+            <Badge appearance="tint" key={key}>
+              <ServiceIcon capability={label} />
+              {label}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      <span className="architecture-arrow" aria-hidden="true">→</span>
+      <div className="architecture-node architecture-fabric">
+        <LayerRegular aria-hidden="true" />
+        <div>
+          <strong>Microsoft Fabric</strong>
+          <span>Workspace + capacity</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplateDetails({
+  template,
+  shell,
+  copiedKey,
+  onShellChange,
+  onCopy,
+  onClose,
+}: {
+  template: GalleryTemplate;
+  shell: ScriptShell;
+  copiedKey: string | null;
+  onShellChange: (shell: ScriptShell) => void;
+  onCopy: (key: string, text: string) => void;
+  onClose: () => void;
+}) {
+  const script = deploymentScript(template, shell);
+  const readmeUrl = `${repositoryUrl}/blob/main/${template.path}/README.md`;
+
+  return (
+    <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="detail-surface">
+        <DialogBody>
+          <DialogTitle
+            action={
+              <Button
+                appearance="subtle"
+                icon={<DismissRegular />}
+                aria-label="Close template details"
+                onClick={onClose}
+              />
+            }
+          >
+            {template.displayName}
+          </DialogTitle>
+          <DialogContent className="detail-content">
+            <div className="detail-intro">
+              <div className="detail-badges">
+                {template.stacks.map((item) => (
+                  <Badge appearance="tint" key={item}>{item}</Badge>
+                ))}
+                {template.capabilities.map((item) => (
+                  <Badge appearance="outline" key={item}>{item}</Badge>
+                ))}
+              </div>
+              <p>{template.description}</p>
+              <a href={template.sourceUrl} target="_blank" rel="noreferrer">
+                View template source <OpenRegular aria-hidden="true" />
+              </a>
+            </div>
+
+            <section className="detail-section">
+              <div className="detail-section-heading">
+                <span>01</span>
+                <div>
+                  <h3>Architecture</h3>
+                  <p>Services shown here are generated from this template's manifest.</p>
+                </div>
+              </div>
+              <ArchitectureDiagram template={template} />
+            </section>
+
+            <section className="detail-section">
+              <div className="detail-section-heading">
+                <span>02</span>
+                <div>
+                  <h3>Before you deploy</h3>
+                  <p>You need a Microsoft Fabric account, tenant access, and an active capacity.</p>
+                </div>
+              </div>
+              <MessageBar intent="info" className="fabric-trial-message">
+                <MessageBarBody>
+                  <MessageBarTitle>New to Microsoft Fabric?</MessageBarTitle>
+                  Start a free 60-day Fabric trial, then return with your tenant and
+                  capacity IDs.
+                  <a href={fabricTrialUrl} target="_blank" rel="noreferrer">
+                    Start a free trial <OpenRegular aria-hidden="true" />
+                  </a>
+                </MessageBarBody>
+              </MessageBar>
+              <ol className="deployment-steps">
+                <li>Install Node.js, Python 3.10+, the Fabric CLI, and the Rayfin CLI.</li>
+                <li>Find your tenant ID and active Fabric capacity ID in the Fabric portal.</li>
+                <li>Sign in with <code>fab auth login</code> and create a workspace on that capacity.</li>
+                <li>Scaffold this template and run <code>rayfin up</code> against the returned workspace ID.</li>
+              </ol>
+            </section>
+
+            <section className="detail-section deployment-section">
+              <div className="detail-section-heading">
+                <span>03</span>
+                <div>
+                  <h3>Deploy to Fabric</h3>
+                  <p>Choose your shell, replace the placeholder IDs, then run the complete script.</p>
+                </div>
+              </div>
+              <div className="script-toolbar">
+                <TabList
+                  selectedValue={shell}
+                  onTabSelect={(_, data) =>
+                    onShellChange(data.value === 'powershell' ? 'powershell' : 'bash')
+                  }
+                  aria-label="Deployment script shell"
+                >
+                  <Tab value="bash">Bash</Tab>
+                  <Tab value="powershell">PowerShell</Tab>
+                </TabList>
+                <CopyButton
+                  copyKey={`deploy-${template.id}-${shell}`}
+                  text={script}
+                  label={`Copy ${shell === 'bash' ? 'Bash' : 'PowerShell'} script`}
+                  copiedKey={copiedKey}
+                  onCopy={onCopy}
+                />
+              </div>
+              <pre className="deployment-script" aria-label={`${shell} deployment script`}>
+                <code>{script}</code>
+              </pre>
+              <p className="deployment-note">
+                Some advanced templates provision additional Fabric items. Review the{' '}
+                <a href={readmeUrl} target="_blank" rel="noreferrer">
+                  template README
+                </a>{' '}
+                for any template-specific setup before deploying.
+              </p>
+            </section>
+          </DialogContent>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
+  );
+}
+
 export default function App() {
   const [query, setQuery] = useState('');
   const [capability, setCapability] = useState(ALL_FILTER);
   const [stack, setStack] = useState(ALL_FILTER);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>(null);
   const [themeMode, setThemeMode] = useState<ThemeMode>(initialTheme);
+  const [selectedTemplate, setSelectedTemplate] = useState<GalleryTemplate | null>(null);
+  const [scriptShell, setScriptShell] = useState<ScriptShell>('bash');
   const searchRef = useRef<HTMLInputElement>(null);
 
   const capabilities = useMemo(
@@ -234,10 +502,14 @@ export default function App() {
 
   useEffect(() => {
     const targetId = window.location.hash.slice(1);
-    if (!targetId) return;
+    if (!targetId.startsWith('template-')) return;
+    const targetTemplate = templates.find(
+      (template) => `template-${template.id}` === targetId,
+    );
     window.requestAnimationFrame(() => {
       document.getElementById(targetId)?.scrollIntoView({ block: 'center' });
     });
+    if (targetTemplate) setSelectedTemplate(targetTemplate);
   }, []);
 
   useEffect(() => {
@@ -273,6 +545,11 @@ export default function App() {
     searchRef.current?.focus();
   };
 
+  const viewTemplate = (template: GalleryTemplate) => {
+    setScriptShell('bash');
+    setSelectedTemplate(template);
+  };
+
   return (
     <FluentProvider
       className="fluent-root"
@@ -292,28 +569,18 @@ export default function App() {
           <span className="community-pill">Community</span>
         </a>
 
-        <Button
-          className="mobile-menu-button"
-          appearance="subtle"
-          icon={mobileNavOpen ? <DismissRegular /> : <NavigationRegular />}
-          onClick={() => setMobileNavOpen((open) => !open)}
-          aria-expanded={mobileNavOpen}
-          aria-controls="primary-navigation"
-          aria-label="Toggle navigation"
-        />
-
         <nav
           id="primary-navigation"
-          className={mobileNavOpen ? 'nav-links nav-open' : 'nav-links'}
+          className="nav-links"
           aria-label="Primary navigation"
         >
-          <a href="#templates" onClick={() => setMobileNavOpen(false)}>
+          <a className="nav-text-link" href="#templates">
             Templates
           </a>
-          <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>
+          <a className="nav-text-link" href="#how-it-works">
             How it works
           </a>
-          <a href={contributionGuideUrl} target="_blank" rel="noreferrer">
+          <a className="nav-text-link" href={contributionGuideUrl} target="_blank" rel="noreferrer">
             Contribute
           </a>
           <Tooltip
@@ -330,7 +597,7 @@ export default function App() {
           </Tooltip>
           <a className="github-button" href={repositoryUrl} target="_blank" rel="noreferrer">
             <CodeRegular aria-hidden="true" />
-            GitHub
+            <span>GitHub</span>
           </a>
         </nav>
       </header>
@@ -347,8 +614,8 @@ export default function App() {
               Community-built for Rayfin + Microsoft Fabric
             </div>
             <h1>
-              Start with a template.
-              <span> Ship with confidence.</span>
+              Build enterprise apps
+              <span> faster with Rayfin.</span>
             </h1>
             <p>
               Discover production-minded starters, apps, and Fabric solutions built on
@@ -383,39 +650,25 @@ export default function App() {
             </dl>
           </div>
 
-          <div className="terminal-wrap" aria-label="Rayfin quick start">
-            <div className="terminal">
-              <div className="terminal-bar">
-                <div className="terminal-dots" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <span>rayfin · quick start</span>
-                <CopyButton
-                  copyKey="hero-command"
-                  text={galleryCommand}
-                  label="Copy"
-                  copiedKey={copyStatus?.key ?? null}
-                  onCopy={copyText}
-                />
+          <div className="hero-cover" aria-label="Rayfin enterprise application platform">
+            <img
+              src={`${import.meta.env.BASE_URL}hero-enterprise.svg`}
+              alt="Enterprise application interface connected to Rayfin services and Microsoft Fabric"
+            />
+            <div className="hero-cover-command">
+              <div>
+                <span>Start from a gallery template</span>
+                <code>rayfin init my-app</code>
               </div>
-              <div className="terminal-content">
-                <p className="terminal-comment"># Choose from every template in this gallery</p>
-                <code>
-                  <span className="prompt">$</span> npm create{' '}
-                  <span className="terminal-accent">@microsoft/rayfin</span> -- --template \
-                  <br />
-                  <span className="terminal-url">https://github.com/mksuni/awesome-rayfin</span>
-                </code>
-                <div className="terminal-result">
-                  <span><CheckmarkRegular aria-hidden="true" /> Gallery loaded</span>
-                  <span><ChevronRightRegular aria-hidden="true" /> Select a template</span>
-                </div>
-              </div>
+              <CopyButton
+                copyKey="hero-command"
+                text={galleryCommand}
+                label="Copy gallery command"
+                copiedKey={copyStatus?.key ?? null}
+                onCopy={copyText}
+                compact
+              />
             </div>
-            <div className="terminal-orbit orbit-a" />
-            <div className="terminal-orbit orbit-b" />
           </div>
         </section>
 
@@ -502,6 +755,7 @@ export default function App() {
                   copiedKey={copyStatus?.key ?? null}
                   onCopy={copyText}
                   onShare={shareTemplate}
+                  onView={viewTemplate}
                 />
               ))}
             </div>
@@ -571,6 +825,16 @@ export default function App() {
         {copyStatus?.error ? <DismissRegular aria-hidden="true" /> : <CheckmarkRegular aria-hidden="true" />}
         {copyStatus?.message}
       </div>
+      {selectedTemplate && (
+        <TemplateDetails
+          template={selectedTemplate}
+          shell={scriptShell}
+          copiedKey={copyStatus?.key ?? null}
+          onShellChange={setScriptShell}
+          onCopy={copyText}
+          onClose={() => setSelectedTemplate(null)}
+        />
+      )}
     </div>
     </FluentProvider>
   );
