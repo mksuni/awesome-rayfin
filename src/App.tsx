@@ -363,6 +363,9 @@ export default function App() {
               <a className="secondary-action" href={contributionGuideUrl} target="_blank" rel="noreferrer">
                 Submit your template
               </a>
+              <a className="secondary-action" href={templateProposalUrl} target="_blank" rel="noreferrer">
+                Propose a template
+              </a>
             </div>
             <dl className="hero-stats">
               <div>
@@ -545,30 +548,6 @@ export default function App() {
           </div>
         </section>
 
-        <section className="contribute-section">
-          <div className="contribute-art" aria-hidden="true">
-            <span className="contribute-ring ring-one" />
-            <span className="contribute-ring ring-two" />
-            <img src={`${import.meta.env.BASE_URL}gallery-mark.svg`} alt="" />
-          </div>
-          <div>
-            <p className="eyebrow">Grow the ecosystem</p>
-            <h2>Built something great with Rayfin?</h2>
-            <p>
-              Share it with the community. Propose a template, follow the contribution
-              guidelines, and help the next builder start further ahead.
-            </p>
-          </div>
-          <div className="contribute-actions">
-            <a className="primary-action" href={templateProposalUrl} target="_blank" rel="noreferrer">
-              Propose a template
-              <ArrowRightRegular aria-hidden="true" />
-            </a>
-            <a href={contributionGuideUrl} target="_blank" rel="noreferrer">
-              Read contribution guide
-            </a>
-          </div>
-        </section>
       </main>
 
       <footer>

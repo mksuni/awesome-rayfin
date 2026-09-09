@@ -48,6 +48,9 @@ describe('gallery application', () => {
   it('routes proposal and submission actions to the correct GitHub destinations', () => {
     render(<App />);
 
+    expect(
+      screen.queryByRole('heading', { name: 'Built something great with Rayfin?' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Propose a template' })).toHaveAttribute(
       'href',
       expect.stringContaining(

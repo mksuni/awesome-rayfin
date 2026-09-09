@@ -510,16 +510,14 @@ svg {
   margin: 0 0 0.6rem;
 }
 
-.section-heading h2,
-.contribute-section h2 {
+.section-heading h2 {
   margin: 0;
   color: #f4f9ff;
   font-size: clamp(2rem, 4vw, 3.2rem);
   letter-spacing: -0.045em;
 }
 
-.section-heading > div > p:last-child,
-.contribute-section > div > p:last-child {
+.section-heading > div > p:last-child {
   max-width: 640px;
   margin: 0.7rem 0 0;
   color: var(--muted);
@@ -955,78 +953,6 @@ svg {
   line-height: 1.6;
 }
 
-.contribute-section {
-  position: relative;
-  display: grid;
-  width: min(1180px, calc(100% - 2rem));
-  min-height: 310px;
-  margin: 0 auto 7rem;
-  padding: 3rem;
-  overflow: hidden;
-  grid-template-columns: 165px 1fr auto;
-  gap: 2.5rem;
-  align-items: center;
-  border: 1px solid rgba(105, 228, 247, 0.16);
-  border-radius: 1rem;
-  background:
-    radial-gradient(circle at 10% 50%, rgba(105, 228, 247, 0.12), transparent 18rem),
-    linear-gradient(120deg, rgba(15, 48, 81, 0.96), rgba(18, 31, 72, 0.92));
-  box-shadow: var(--shadow);
-}
-
-.contribute-art {
-  position: relative;
-  display: grid;
-  width: 150px;
-  height: 150px;
-  place-items: center;
-}
-
-.contribute-art img {
-  position: relative;
-  z-index: 2;
-  width: 4.3rem;
-  height: 4.3rem;
-  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.35));
-}
-
-.contribute-ring {
-  position: absolute;
-  border: 1px solid rgba(105, 228, 247, 0.22);
-  border-radius: 50%;
-}
-
-.ring-one {
-  inset: 1rem;
-}
-
-.ring-two {
-  inset: -1rem 2.5rem;
-  transform: rotate(55deg);
-}
-
-.contribute-section .eyebrow {
-  margin: 0 0 0.65rem;
-}
-
-.contribute-section h2 {
-  font-size: clamp(1.8rem, 3vw, 2.7rem);
-}
-
-.contribute-actions {
-  display: grid;
-  justify-items: center;
-  gap: 1rem;
-}
-
-.contribute-actions > a:last-child {
-  color: #a7bdd1;
-  font-size: 0.73rem;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
-}
-
 footer {
   display: grid;
   width: min(1180px, calc(100% - 2rem));
@@ -1124,19 +1050,6 @@ footer a:hover {
     width: min(620px, 100%);
   }
 
-  .contribute-section {
-    grid-template-columns: 120px 1fr;
-  }
-
-  .contribute-art {
-    width: 110px;
-    height: 110px;
-  }
-
-  .contribute-actions {
-    grid-column: 2;
-    justify-items: start;
-  }
 }
 
 @media (max-width: 760px) {
@@ -1229,21 +1142,6 @@ footer a:hover {
     grid-template-columns: 1fr;
   }
 
-  .contribute-section {
-    padding: 2rem;
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .contribute-art {
-    margin: 0 auto;
-  }
-
-  .contribute-actions {
-    grid-column: auto;
-    justify-items: center;
-  }
-
   footer {
     padding: 2rem 0;
     grid-template-columns: 1fr;
@@ -1301,9 +1199,6 @@ footer a:hover {
     display: none;
   }
 
-  .contribute-section {
-    width: min(100% - 1.2rem, 1180px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1342,7 +1237,12 @@ footer a:hover {
 }
 
 .fluent-root .search-field input {
+  color: var(--colorNeutralForeground1);
   font-size: var(--fontSizeBase300);
+}
+
+.fluent-root .search-field input::placeholder {
+  color: var(--colorNeutralForeground4);
 }
 
 .fluent-root .search-field button {
@@ -1451,7 +1351,6 @@ footer a:hover {
 
 [data-theme='light'] .hero-copy h1,
 [data-theme='light'] .section-heading h2,
-[data-theme='light'] .contribute-section h2,
 [data-theme='light'] .workflow-grid h3,
 [data-theme='light'] .empty-state h3 {
   color: #242424;
@@ -1464,7 +1363,6 @@ footer a:hover {
 
 [data-theme='light'] .hero-copy > p,
 [data-theme='light'] .section-heading > div > p:last-child,
-[data-theme='light'] .contribute-section > div > p:last-child,
 [data-theme='light'] .workflow-grid p,
 [data-theme='light'] .empty-state,
 [data-theme='light'] .result-count,
@@ -1551,17 +1449,6 @@ footer a:hover {
 
 [data-theme='light'] .workflow-grid article > span {
   color: #0f6cbd;
-}
-
-[data-theme='light'] .contribute-section {
-  border-color: #c7e0f4;
-  background:
-    radial-gradient(circle at 10% 50%, rgba(0, 120, 212, 0.1), transparent 18rem),
-    linear-gradient(120deg, #ffffff, #eff6fc);
-}
-
-[data-theme='light'] .contribute-actions > a:last-child {
-  color: #424242;
 }
 
 [data-theme='light'] footer {
