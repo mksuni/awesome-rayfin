@@ -749,14 +749,6 @@ export default function App() {
             </div>
           </div>
         </section>
-
-        <section className="trust-strip" aria-label="Gallery qualities">
-          <span><CircleRegular aria-hidden="true" /> Manifest-driven</span>
-          <span><CircleRegular aria-hidden="true" /> Rayfin static hosting</span>
-          <span><CircleRegular aria-hidden="true" /> Fabric-ready</span>
-          <span><CircleRegular aria-hidden="true" /> Open source</span>
-        </section>
-
         <section className="gallery-section" id="templates">
           <div className="section-heading">
             <div>
