@@ -66,6 +66,16 @@ npm run rayfin:up
 `npm run generate:gallery` refreshes the generated card data. The command also
 runs automatically before development and production builds.
 
+### GitHub Pages
+
+The gallery deploys to
+[mksuni.github.io/awesome-rayfin](https://mksuni.github.io/awesome-rayfin/)
+through `.github/workflows/deploy-pages.yml`. GitHub Pages must use **GitHub
+Actions** as its build and deployment source under **Settings > Pages**. After
+that one-time setting is enabled, every push to `main` builds the gallery with
+the `/awesome-rayfin/` base path and publishes it automatically. The workflow
+can also be started manually from the repository's **Actions** tab.
+
 ---
 
 ## 📦 Templates
