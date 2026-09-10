@@ -454,6 +454,7 @@ export default function App() {
   const [selectedTemplate, setSelectedTemplate] = useState<GalleryTemplate | null>(null);
   const [scriptShell, setScriptShell] = useState<ScriptShell>('bash');
   const searchRef = useRef<HTMLInputElement>(null);
+  const galleryScrollTargetRef = useRef<string | null>(null);
 
   const capabilities = useMemo(
     () => uniqueSorted(templates.map((template) => template.capabilities)),
@@ -521,6 +522,22 @@ export default function App() {
     return () => window.clearTimeout(timeout);
   }, [copyStatus]);
 
+  useEffect(() => {
+    const targetId = galleryScrollTargetRef.current;
+    if (!selectedTemplate && !targetId) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      if (selectedTemplate) {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      } else if (targetId) {
+        document.getElementById(targetId)?.scrollIntoView?.({ block: 'center' });
+        galleryScrollTargetRef.current = null;
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedTemplate]);
+
   const copyText = async (key: string, text: string, message = 'Command copied') => {
     try {
       await navigator.clipboard.writeText(text);
@@ -553,34 +570,17 @@ export default function App() {
     window.history.pushState({ galleryTemplate: template.id }, '', url);
     setScriptShell('bash');
     setSelectedTemplate(template);
-    window.requestAnimationFrame(() => {
-      document.getElementById('template-detail')?.scrollIntoView?.({ block: 'start' });
-    });
   };
 
   const showGallery = (targetId?: string) => {
     const url = new URL(window.location.href);
     url.hash = '';
     window.history.replaceState(null, '', url);
+    galleryScrollTargetRef.current = targetId ?? null;
     setSelectedTemplate(null);
-    if (targetId) {
-      window.requestAnimationFrame(() => {
-        document.getElementById(targetId)?.scrollIntoView?.({ block: 'start' });
-      });
-    }
   };
 
   const backToGallery = () => {
-    const historyState = window.history.state;
-    if (
-      selectedTemplate &&
-      typeof historyState === 'object' &&
-      historyState !== null &&
-      historyState.galleryTemplate === selectedTemplate.id
-    ) {
-      window.history.back();
-      return;
-    }
     showGallery(selectedTemplate ? `template-${selectedTemplate.id}` : 'templates');
   };
 

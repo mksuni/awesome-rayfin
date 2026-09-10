@@ -62,7 +62,7 @@ describe('gallery application', () => {
     );
   });
 
-  it('shows architecture and cross-platform Fabric deployment guidance for templates', () => {
+  it('shows architecture and cross-platform Fabric deployment guidance for templates', async () => {
     render(<App />);
 
     const detailButtons = screen.getAllByRole('button', { name: 'View details' });
@@ -90,7 +90,9 @@ describe('gallery application', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to gallery' }));
-    expect(screen.getByRole('heading', { name: /build enterprise apps/i })).toBeVisible();
-    expect(screen.getAllByRole('button', { name: 'View details' })).toHaveLength(10);
+    expect(await screen.findAllByRole('button', { name: 'View details' })).toHaveLength(10);
+    expect(
+      screen.queryByRole('heading', { name: 'Angular Blank App', level: 1 }),
+    ).not.toBeInTheDocument();
   });
 });
