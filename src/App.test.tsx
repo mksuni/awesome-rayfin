@@ -5,6 +5,7 @@ import App from './App';
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.history.replaceState(null, '', window.location.pathname);
   delete document.documentElement.dataset.theme;
 });
 
@@ -53,9 +54,7 @@ describe('gallery application', () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Propose a template' })).toHaveAttribute(
       'href',
-      expect.stringContaining(
-        '/issues/new?template=new-template-proposal.yml&labels=template',
-      ),
+      'https://github.com/microsoft/awesome-rayfin/issues/new?template=new-template-proposal.yml&labels=template',
     );
     expect(screen.getByRole('link', { name: 'Submit your template' })).toHaveAttribute(
       'href',
@@ -70,7 +69,9 @@ describe('gallery application', () => {
     expect(detailButtons).toHaveLength(10);
     fireEvent.click(detailButtons[0]);
 
-    expect(screen.getByRole('dialog')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Angular Blank App', level: 1 })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: /build enterprise apps/i })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Architecture' })).toBeVisible();
     expect(screen.getByRole('img', { name: /architecture:/i })).toBeVisible();
     expect(screen.getByRole('link', { name: /start a free trial/i })).toHaveAttribute(
@@ -87,5 +88,9 @@ describe('gallery application', () => {
     expect(screen.getByLabelText('powershell deployment script')).toHaveTextContent(
       '$FabricWorkspaceId',
     );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to gallery' }));
+    expect(screen.getByRole('heading', { name: /build enterprise apps/i })).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'View details' })).toHaveLength(10);
   });
 });

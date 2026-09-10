@@ -2,11 +2,6 @@ import {
   Badge,
   Button,
   Card,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogSurface,
-  DialogTitle,
   FluentProvider,
   Input,
   MessageBar,
@@ -20,6 +15,7 @@ import {
   webLightTheme,
 } from '@fluentui/react-components';
 import {
+  ArrowLeftRegular,
   ArrowRightRegular,
   CheckmarkRegular,
   CircleRegular,
@@ -46,7 +42,7 @@ const templates = templateData as GalleryTemplate[];
 const repositoryUrl = 'https://github.com/mksuni/awesome-rayfin';
 const contributionGuideUrl = `${repositoryUrl}/blob/main/CONTRIBUTING.md`;
 const templateProposalUrl =
-  `${repositoryUrl}/issues/new?template=new-template-proposal.yml&labels=template`;
+  'https://github.com/microsoft/awesome-rayfin/issues/new?template=new-template-proposal.yml&labels=template';
 const galleryCommand =
   'npm create @microsoft/rayfin -- --template https://github.com/mksuni/awesome-rayfin';
 const fabricTrialUrl =
@@ -323,50 +319,52 @@ function TemplateDetails({
   copiedKey,
   onShellChange,
   onCopy,
-  onClose,
+  onBack,
 }: {
   template: GalleryTemplate;
   shell: ScriptShell;
   copiedKey: string | null;
   onShellChange: (shell: ScriptShell) => void;
   onCopy: (key: string, text: string) => void;
-  onClose: () => void;
+  onBack: () => void;
 }) {
   const script = deploymentScript(template, shell);
   const readmeUrl = `${repositoryUrl}/blob/main/${template.path}/README.md`;
 
   return (
-    <Dialog open onOpenChange={(_, data) => !data.open && onClose()}>
-      <DialogSurface className="detail-surface">
-        <DialogBody>
-          <DialogTitle
-            action={
-              <Button
-                appearance="subtle"
-                icon={<DismissRegular />}
-                aria-label="Close template details"
-                onClick={onClose}
-              />
-            }
-          >
-            {template.displayName}
-          </DialogTitle>
-          <DialogContent className="detail-content">
-            <div className="detail-intro">
-              <div className="detail-badges">
-                {template.stacks.map((item) => (
-                  <Badge appearance="tint" key={item}>{item}</Badge>
-                ))}
-                {template.capabilities.map((item) => (
-                  <Badge appearance="outline" key={item}>{item}</Badge>
-                ))}
-              </div>
-              <p>{template.description}</p>
-              <a href={template.sourceUrl} target="_blank" rel="noreferrer">
-                View template source <OpenRegular aria-hidden="true" />
-              </a>
-            </div>
+    <article
+      className="detail-page"
+      id="template-detail"
+      aria-labelledby={`detail-title-${template.id}`}
+    >
+      <div className="detail-page-topbar">
+        <Button
+          appearance="subtle"
+          icon={<ArrowLeftRegular />}
+          onClick={onBack}
+        >
+          Back to gallery
+        </Button>
+        <a href={template.sourceUrl} target="_blank" rel="noreferrer">
+          View template source <OpenRegular aria-hidden="true" />
+        </a>
+      </div>
 
+      <header className="detail-page-header">
+        <p className="eyebrow">Template deployment guide</p>
+        <h1 id={`detail-title-${template.id}`}>{template.displayName}</h1>
+        <p>{template.description}</p>
+        <div className="detail-badges">
+          {template.stacks.map((item) => (
+            <Badge appearance="tint" key={item}>{item}</Badge>
+          ))}
+          {template.capabilities.map((item) => (
+            <Badge appearance="outline" key={item}>{item}</Badge>
+          ))}
+        </div>
+      </header>
+
+      <div className="detail-content">
             <section className="detail-section">
               <div className="detail-section-heading">
                 <span>01</span>
@@ -442,10 +440,8 @@ function TemplateDetails({
                 for any template-specific setup before deploying.
               </p>
             </section>
-          </DialogContent>
-        </DialogBody>
-      </DialogSurface>
-    </Dialog>
+      </div>
+    </article>
   );
 }
 
@@ -486,6 +482,25 @@ export default function App() {
   }, [themeMode]);
 
   useEffect(() => {
+    const syncTemplateFromLocation = () => {
+      const targetId = window.location.hash.slice(1);
+      const targetTemplate = targetId.startsWith('template-')
+        ? templates.find((template) => `template-${template.id}` === targetId)
+        : undefined;
+      setSelectedTemplate(targetTemplate ?? null);
+      if (targetTemplate) setScriptShell('bash');
+    };
+
+    syncTemplateFromLocation();
+    window.addEventListener('hashchange', syncTemplateFromLocation);
+    window.addEventListener('popstate', syncTemplateFromLocation);
+    return () => {
+      window.removeEventListener('hashchange', syncTemplateFromLocation);
+      window.removeEventListener('popstate', syncTemplateFromLocation);
+    };
+  }, []);
+
+  useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
       if (
         event.key === '/' &&
@@ -498,18 +513,6 @@ export default function App() {
     };
     window.addEventListener('keydown', focusSearch);
     return () => window.removeEventListener('keydown', focusSearch);
-  }, []);
-
-  useEffect(() => {
-    const targetId = window.location.hash.slice(1);
-    if (!targetId.startsWith('template-')) return;
-    const targetTemplate = templates.find(
-      (template) => `template-${template.id}` === targetId,
-    );
-    window.requestAnimationFrame(() => {
-      document.getElementById(targetId)?.scrollIntoView({ block: 'center' });
-    });
-    if (targetTemplate) setSelectedTemplate(targetTemplate);
   }, []);
 
   useEffect(() => {
@@ -534,7 +537,6 @@ export default function App() {
   const shareTemplate = (template: GalleryTemplate) => {
     const url = new URL(window.location.href);
     url.hash = `template-${template.id}`;
-    window.history.replaceState(null, '', url);
     void copyText(`share-${template.id}`, url.toString(), 'Template link copied');
   };
 
@@ -546,8 +548,40 @@ export default function App() {
   };
 
   const viewTemplate = (template: GalleryTemplate) => {
+    const url = new URL(window.location.href);
+    url.hash = `template-${template.id}`;
+    window.history.pushState({ galleryTemplate: template.id }, '', url);
     setScriptShell('bash');
     setSelectedTemplate(template);
+    window.requestAnimationFrame(() => {
+      document.getElementById('template-detail')?.scrollIntoView?.({ block: 'start' });
+    });
+  };
+
+  const showGallery = (targetId?: string) => {
+    const url = new URL(window.location.href);
+    url.hash = '';
+    window.history.replaceState(null, '', url);
+    setSelectedTemplate(null);
+    if (targetId) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView?.({ block: 'start' });
+      });
+    }
+  };
+
+  const backToGallery = () => {
+    const historyState = window.history.state;
+    if (
+      selectedTemplate &&
+      typeof historyState === 'object' &&
+      historyState !== null &&
+      historyState.galleryTemplate === selectedTemplate.id
+    ) {
+      window.history.back();
+      return;
+    }
+    showGallery(selectedTemplate ? `template-${selectedTemplate.id}` : 'templates');
   };
 
   return (
@@ -556,12 +590,24 @@ export default function App() {
       theme={themeMode === 'dark' ? webDarkTheme : webLightTheme}
     >
     <div className="app-shell">
-      <a className="skip-link" href="#templates">
-        Skip to templates
+      <a className="skip-link" href={selectedTemplate ? '#template-detail' : '#templates'}>
+        Skip to {selectedTemplate ? 'template details' : 'templates'}
       </a>
 
       <header className="site-header">
-        <a className="brand" href="#" aria-label="Awesome Rayfin home">
+        <a
+          className="brand"
+          href="#"
+          aria-label="Awesome Rayfin home"
+          onClick={
+            selectedTemplate
+              ? (event) => {
+                  event.preventDefault();
+                  showGallery();
+                }
+              : undefined
+          }
+        >
           <img src={`${import.meta.env.BASE_URL}gallery-mark.svg`} alt="" />
           <span>
             <strong>Awesome</strong> Rayfin
@@ -574,10 +620,32 @@ export default function App() {
           className="nav-links"
           aria-label="Primary navigation"
         >
-          <a className="nav-text-link" href="#templates">
+          <a
+            className="nav-text-link"
+            href="#templates"
+            onClick={
+              selectedTemplate
+                ? (event) => {
+                    event.preventDefault();
+                    showGallery('templates');
+                  }
+                : undefined
+            }
+          >
             Templates
           </a>
-          <a className="nav-text-link" href="#how-it-works">
+          <a
+            className="nav-text-link"
+            href="#how-it-works"
+            onClick={
+              selectedTemplate
+                ? (event) => {
+                    event.preventDefault();
+                    showGallery('how-it-works');
+                  }
+                : undefined
+            }
+          >
             How it works
           </a>
           <a className="nav-text-link" href={contributionGuideUrl} target="_blank" rel="noreferrer">
@@ -603,6 +671,17 @@ export default function App() {
       </header>
 
       <main>
+        {selectedTemplate ? (
+          <TemplateDetails
+            template={selectedTemplate}
+            shell={scriptShell}
+            copiedKey={copyStatus?.key ?? null}
+            onShellChange={setScriptShell}
+            onCopy={copyText}
+            onBack={backToGallery}
+          />
+        ) : (
+        <>
         <section className="hero">
           <div className="hero-glow glow-one" />
           <div className="hero-glow glow-two" />
@@ -614,8 +693,7 @@ export default function App() {
               Community-built for Rayfin + Microsoft Fabric
             </div>
             <h1>
-              Build enterprise apps
-              <span> faster with Rayfin.</span>
+              Build apps    <span> faster with Rayfin.</span>
             </h1>
             <p>
               Discover production-minded starters, apps, and Fabric solutions built on
@@ -801,7 +879,8 @@ export default function App() {
             </article>
           </div>
         </section>
-
+        </>
+        )}
       </main>
 
       <footer>
@@ -825,16 +904,6 @@ export default function App() {
         {copyStatus?.error ? <DismissRegular aria-hidden="true" /> : <CheckmarkRegular aria-hidden="true" />}
         {copyStatus?.message}
       </div>
-      {selectedTemplate && (
-        <TemplateDetails
-          template={selectedTemplate}
-          shell={scriptShell}
-          copiedKey={copyStatus?.key ?? null}
-          onShellChange={setScriptShell}
-          onCopy={copyText}
-          onClose={() => setSelectedTemplate(null)}
-        />
-      )}
     </div>
     </FluentProvider>
   );
