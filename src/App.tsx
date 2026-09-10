@@ -762,6 +762,7 @@ export default function App() {
             <div>
               <p className="eyebrow">Template explorer</p>
               <h2>Find your starting point</h2>
+              <br/>
               <p>
                 Search by use case or narrow the collection by Rayfin capability and
                 application stack.
