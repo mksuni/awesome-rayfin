@@ -18,6 +18,7 @@ import {
   ArrowLeftRegular,
   ArrowRightRegular,
   CheckmarkRegular,
+  CircleRegular,
   ClipboardRegular,
   CodeRegular,
   DatabaseRegular,
@@ -46,8 +47,6 @@ const galleryCommand =
   'npm create @microsoft/rayfin -- --template https://github.com/mksuni/awesome-rayfin';
 const fabricTrialUrl =
   'https://learn.microsoft.com/fabric/fundamentals/fabric-trial';
-const templateAuthoringGuideUrl =
-  'https://learn.microsoft.com/en-us/fabric/apps/author-templates';
 
 type CopyStatus = { key: string; message: string; error: boolean } | null;
 type ThemeMode = 'light' | 'dark';
@@ -637,9 +636,15 @@ export default function App() {
           </a>
           <a
             className="nav-text-link"
-            href={templateAuthoringGuideUrl}
-            target="_blank"
-            rel="noreferrer"
+            href="#how-it-works"
+            onClick={
+              selectedTemplate
+                ? (event) => {
+                    event.preventDefault();
+                    showGallery('how-it-works');
+                  }
+                : undefined
+            }
           >
             How it works
           </a>
