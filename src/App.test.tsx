@@ -60,6 +60,10 @@ describe('gallery application', () => {
       'href',
       'https://github.com/mksuni/awesome-rayfin/blob/main/CONTRIBUTING.md',
     );
+    expect(screen.getByRole('link', { name: 'How it works' })).toHaveAttribute(
+      'href',
+      'https://learn.microsoft.com/en-us/fabric/apps/author-templates',
+    );
   });
 
   it('shows architecture and cross-platform Fabric deployment guidance for templates', async () => {
